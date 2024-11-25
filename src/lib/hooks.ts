@@ -3,54 +3,21 @@ import { JobItem, JobItemExpanded } from "./types";
 import { BASE_API_URL } from "./constants";
 import { useQuery } from "@tanstack/react-query";
 
-export function useActiveId() {
-  const [activeId, setActiveId] = useState<number | null>(null);
+type JobItemApiResponse = {
+  public: boolean;
+  jobItem: JobItemExpanded;
+};
 
-  useEffect(() => {
-    const handleHashChange = () => {
-      // + is a uniry operator that converts a string to a number
-      const id = +window.location.hash.slice(1);
-      setActiveId(id);
-    };
-    handleHashChange();
-
-    window.addEventListener("hashchange", handleHashChange);
-
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
-  }, []);
-
-  return activeId;
-}
-
-// export function useJobItem(id: number | null) {
-//   const [jobItem, setJobItem] = useState<JobItemExpanded | null>(null);
-//   const [isLoading, setIsLoading] = useState(false);
-
-//   useEffect(() => {
-//     if (!id) return;
-
-//     const fetchData = async () => {
-//       setIsLoading(true);
-//       const response = await fetch(`${BASE_API_URL}/${id}`);
-//       const data = await response.json();
-//       setIsLoading(false);
-//       setJobItem(data.jobItem);
-//     };
-//     fetchData();
-//   }, [id]);
-//   return { jobItem, isLoading } as const;
-// }
+const fetchJobItem = async (id: number): Promise<JobItemApiResponse> => {
+  const response = await fetch(`${BASE_API_URL}/${id}`);
+  const data = await response.json();
+  return data;
+};
 
 export function useJobItem(id: number | null) {
   const { data, isLoading } = useQuery(
     ["job-item", id],
-    async () => {
-      const response = await fetch(`${BASE_API_URL}/${id}`);
-      const data = await response.json();
-      return data;
-    },
+    () => (id ? fetchJobItem(id) : null),
     {
       staleTime: 1000 * 60 * 60,
       refetchOnWindowFocus: false,
@@ -60,7 +27,6 @@ export function useJobItem(id: number | null) {
     }
   );
 
-  console.log(data);
   return { jobItem: data?.jobItem, isLoading } as const;
 }
 
@@ -98,4 +64,25 @@ export function useDebounce<T>(value: T, delay = 500): T {
   }, [value, delay]);
 
   return debouncedValue;
+}
+
+export function useActiveId() {
+  const [activeId, setActiveId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      // + is a uniry operator that converts a string to a number
+      const id = +window.location.hash.slice(1);
+      setActiveId(id);
+    };
+    handleHashChange();
+
+    window.addEventListener("hashchange", handleHashChange);
+
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, []);
+
+  return activeId;
 }
