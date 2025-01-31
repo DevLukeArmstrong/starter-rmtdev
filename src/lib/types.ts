@@ -17,3 +17,7 @@ export type JobItemExpanded = JobItem & {
   qualifications: string[];
   reviews: string[];
 };
+
+export type SortBy = "relevant" | "recent";
+
+export type PageDirection = "next" | "previous";
